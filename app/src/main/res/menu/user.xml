@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/user_menu_product"
+        android:icon="@drawable/ic_product_24dp"
+        android:title="@string/user_menu_product"
+        app:showAsAction="always|withText" />
+    <item
+        android:id="@+id/user_menu_list"
+        android:icon="@drawable/ic_list_24dp"
+        android:title="@string/user_menu_list"
+        app:showAsAction="always|withText" />
+    <item
+        android:id="@+id/user_menu_user"
+        android:icon="@drawable/ic_user_24dp"
+        android:title="@string/user_menu_user"
+        app:showAsAction="always|withText" />
+    <item
+        android:id="@+id/user_menu_exit"
+        android:icon="@drawable/ic_logout_24dp"
+        android:title="@string/user_menu_logout"
+        app:showAsAction="always|withText" />
+</menu>

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "669850682141",
+    "firebase_url": "https://supermagazin-d834e.firebaseio.com",
+    "project_id": "supermagazin-d834e",
+    "storage_bucket": "supermagazin-d834e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:669850682141:android:5740ebb5fb2adb31",
+        "android_client_info": {
+          "package_name": "com.uonagent.supermagazin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "669850682141-phqve626f32nd4uj585sbjse6rft8n7p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.uonagent.supermagazin",
+            "certificate_hash": "36f5a386f50d1d544008e7c1433b00d3b02f5e7c"
+          }
+        },
+        {
+          "client_id": "669850682141-ap9ecure0f70t1a1c6f1a5ga8nhufcsa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBH00txMeFo12whpq_NI-GlE9KlPPr7QuU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "669850682141-ap9ecure0f70t1a1c6f1a5ga8nhufcsa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
