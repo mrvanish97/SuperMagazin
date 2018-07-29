@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,8 @@ private const val ARG_PARAM2 = "param2"
 
 private const val LIST_STATE_KEY = "list_state_key"
 private const val LIST_POSITION = "pos"
+
+private const val TAG = "ItemListFragment"
 
 class ItemListFragment : Fragment() {
 
@@ -50,9 +53,13 @@ class ItemListFragment : Fragment() {
 
         list = ArrayList()
 
-        mAdapter = ListAdapter(list)
+        mAdapter = ListAdapter(list, context)
     }
 
+    fun notifyDatasetChanged() {
+        Log.d(TAG, "HELLLLLLLOOOOO0OOO")
+        mRecyclerView.adapter.notifyDataSetChanged()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {

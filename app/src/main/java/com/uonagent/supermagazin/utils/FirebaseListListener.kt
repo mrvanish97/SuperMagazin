@@ -5,4 +5,5 @@ import com.uonagent.supermagazin.user.ListItemModel
 interface FirebaseListListener {
     fun onStart()
     fun onAdd(item: ListItemModel)
+    fun onFinish()
 }

@@ -3,10 +3,13 @@ package com.uonagent.supermagazin.user
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import com.uonagent.supermagazin.R
 import com.uonagent.supermagazin.login.LoginActivity
 
 private const val LIST_FRAGMENT_TAG = "list"
+private const val LIST_ITEM_ARRAY = "array"
+private const val TAG = "UserActivity"
 
 class UserActivity : AppCompatActivity(), UserContract.View,
         ItemListFragment.OnFragmentInteractionListener {
@@ -24,7 +27,15 @@ class UserActivity : AppCompatActivity(), UserContract.View,
     }
 
     override fun setListItemArray(listItemArray: MutableList<ListItemModel>) {
+        Log.d(TAG, listItemArray.size.toString())
+        this.listItemArray?.clear()
+        this.listItemArray?.addAll(listItemArray)
+        notifyFragmentAboutListChange()
+    }
 
+    private fun notifyFragmentAboutListChange() {
+        (supportFragmentManager.findFragmentByTag(LIST_FRAGMENT_TAG) as ItemListFragment?)
+                ?.notifyDatasetChanged()
     }
 
     override fun showErrorMessage(message: String) {

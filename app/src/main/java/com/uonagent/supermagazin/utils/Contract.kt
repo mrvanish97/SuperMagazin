@@ -1,7 +1,7 @@
 package com.uonagent.supermagazin.utils
 
-import android.graphics.Bitmap
-import java.net.URL
+import android.content.Context
+import android.widget.ImageView
 
 interface Contract {
     
@@ -16,8 +16,7 @@ interface Contract {
         fun signInEmail(email: String, password: String, listener: FirebaseAuthListener)
         fun signInAnonymously(listener: FirebaseAuthListener)
         fun addItemListListener(listener: FirebaseListListener)
-        fun initialize(listener: FirebaseListListener)
-        fun loadImageFromStorage(url: URL)
-        fun listItemPhotoProcess(bitmap: Bitmap)
+        fun reloadItemList(listener: FirebaseListListener)
+        fun loadItemPhotoFromStorage(url: String?, dest: ImageView?, context: Context?)
     }
 }
