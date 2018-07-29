@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.uonagent.supermagazin.R
 import com.uonagent.supermagazin.login.LoginActivity
+import kotlinx.android.synthetic.main.activity_user.*
 
 private const val LIST_FRAGMENT_TAG = "list"
 private const val LIST_ITEM_ARRAY = "array"
@@ -15,6 +16,8 @@ class UserActivity : AppCompatActivity(), UserContract.View,
         ItemListFragment.OnFragmentInteractionListener {
 
     private var itemListFragment: ItemListFragment? = null
+
+
     private var listItemArray: MutableList<ListItemModel>? = null
 
     override fun onFragmentViewCreated(list: MutableList<ListItemModel>) {
@@ -60,9 +63,13 @@ class UserActivity : AppCompatActivity(), UserContract.View,
 
         mPresenter = UserPresenter(this)
 
+        setFragment(LIST_FRAGMENT_TAG)
+    }
+
+    private fun setFragment(tag: String) {
         val fm = supportFragmentManager
         val ft = fm.beginTransaction()
-        itemListFragment = fm.findFragmentByTag(LIST_FRAGMENT_TAG) as ItemListFragment?
+        val fragment = fm.findFragmentByTag(LIST_FRAGMENT_TAG)
         if (itemListFragment == null) {
             itemListFragment = ItemListFragment()
         }
@@ -70,7 +77,6 @@ class UserActivity : AppCompatActivity(), UserContract.View,
             ft.add(R.id.fragment_holder, itemListFragment, LIST_FRAGMENT_TAG)
                     .commit()
         }
-
     }
 
     override fun onStart() {
