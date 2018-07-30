@@ -24,4 +24,8 @@
     <string name="user_menu_list">List</string>
     <string name="user_menu_user">User</string>
     <string name="user_menu_logout">Log out</string>
+    <string name="item_menu_buy">Buy</string>
+    <string name="item_menu_edit">Edit</string>
+    <string name="item_menu_add">Add</string>
+    <string name="item_menu_accept">Accept</string>
 </resources>

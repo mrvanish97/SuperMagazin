@@ -10,7 +10,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.uonagent.supermagazin.R
+import com.uonagent.supermagazin.utils.RecyclerItemClickListener
 import kotlinx.android.synthetic.main.fragment_list.view.*
+import java.text.FieldPosition
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -28,7 +30,6 @@ class ItemListFragment : Fragment() {
 
     private var mCallBack: OnFragmentInteractionListener? = null
 
-    private lateinit var mLayoutManager: LinearLayoutManager
     private lateinit var mAdapter: ListAdapter
 
     private lateinit var mRecyclerView: RecyclerView
@@ -39,13 +40,6 @@ class ItemListFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mLayoutManager = LinearLayoutManager(context)
-        if (savedInstanceState != null) {
-            position = savedInstanceState.getInt(LIST_POSITION)
-            mLayoutManager.scrollToPosition(position)
-        }
-        mLayoutManager.orientation = LinearLayoutManager.VERTICAL
-
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
@@ -66,8 +60,31 @@ class ItemListFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_list, container, false)
 
         mRecyclerView = view.user_list
-        mRecyclerView.layoutManager = mLayoutManager
+        mRecyclerView.layoutManager = LinearLayoutManager(context)
         mRecyclerView.adapter = mAdapter
+
+        if (savedInstanceState != null) {
+            position = savedInstanceState.getInt(LIST_POSITION)
+            mRecyclerView.layoutManager.scrollToPosition(position)
+        }
+        (mRecyclerView.layoutManager as LinearLayoutManager)
+                .orientation = LinearLayoutManager.VERTICAL
+
+        mRecyclerView.addOnItemTouchListener(
+                object : RecyclerItemClickListener(
+                        context, mRecyclerView,
+                        object : RecyclerItemClickListener.OnItemClickListener {
+                            override fun onItemClick(view: View, position: Int) {
+                                mCallBack?.onItemClick(list[position].uid)
+                            }
+
+                            override fun onLongItemClick(view: View?, position: Int) {
+                                mCallBack?.onItemLongClick(list[position].uid)
+                            }
+
+                        }) {
+
+                })
 
         mCallBack?.onFragmentViewCreated(list)
 
@@ -90,15 +107,19 @@ class ItemListFragment : Fragment() {
 
     interface OnFragmentInteractionListener {
         fun onFragmentViewCreated(list: MutableList<ListItemModel>)
+        fun onItemClick(uid: String)
+        fun onItemLongClick(uid: String)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
 
-        val currentPosition = (mRecyclerView.layoutManager as LinearLayoutManager)
-                .findFirstCompletelyVisibleItemPosition()
+        val currentPosition = (mRecyclerView.layoutManager as LinearLayoutManager?)
+                ?.findFirstCompletelyVisibleItemPosition()
 
-        outState.putInt(LIST_POSITION, currentPosition)
+        if (currentPosition != null) {
+            outState.putInt(LIST_POSITION, currentPosition)
+        }
 
         //outState.putParcelable(LIST_STATE_KEY, mRecyclerView.layoutManager.onSaveInstanceState())
     }
