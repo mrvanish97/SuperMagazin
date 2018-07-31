@@ -1,7 +1,9 @@
 package com.uonagent.supermagazin.user
 
 import android.util.Log
+import com.uonagent.supermagazin.utils.FirebaseAuthListener
 import com.uonagent.supermagazin.utils.FirebaseListListener
+import com.uonagent.supermagazin.utils.ItemModel
 import com.uonagent.supermagazin.utils.UserViewType
 
 private const val TAG = "UserPresenter"
@@ -12,13 +14,30 @@ class UserPresenter(private val mView: UserContract.View) : UserContract.Present
         val type = mView.getViewType()
         Log.d(TAG, type.toString())
 
-        if (UserRepository.currentUserIsAdmin()) {
+        if (!UserRepository.isUserAnon()) {
+            UserRepository.isCurrentUserAdmin(object : FirebaseAuthListener {
+                override fun onStart() {
+                }
+
+                override fun onSuccess() {
+                    when (type) {
+                        UserViewType.ITEM -> mView.setAdminItemPermissions()
+                        UserViewType.LIST -> mView.setAdminListPermissions()
+                    }
+                }
+
+                override fun onFailure() {
+                    when (type) {
+                        UserViewType.ITEM -> mView.setUserItemPermissions()
+                        UserViewType.LIST -> mView.setUserListPermissions()
+                    }
+                }
+
+            })
+        } else {
             when (type) {
-                UserViewType.ITEM -> mView
-                    UserViewType.LIST
-                -> TODO()
-                UserViewType.PROFILE -> TODO()
-                null -> TODO()
+                UserViewType.ITEM -> mView.setUserItemPermissions()
+                UserViewType.LIST -> mView.setUserListPermissions()
             }
         }
     }
@@ -28,12 +47,12 @@ class UserPresenter(private val mView: UserContract.View) : UserContract.Present
     }
 
     override fun sendFullListUpdateRequest() {
-        val updatedList = arrayListOf<ListItemModel>()
+        val updatedList = arrayListOf<ItemModel>()
         UserRepository.reloadItemList(object : FirebaseListListener {
             override fun onStart() {
             }
 
-            override fun onAdd(item: ListItemModel) {
+            override fun onAdd(item: ItemModel) {
                 updatedList.add(item)
             }
 
@@ -45,13 +64,20 @@ class UserPresenter(private val mView: UserContract.View) : UserContract.Present
 
     override fun onItemClick() {
         val uid = mView.getItemUid()
-        if (UserRepository.currentUserIsAdmin()) {
-            mView.makeFieldsClickable()
-        } else {
-            mView.makeFieldsUnclickable()
-        }
         UserRepository.getItemById(uid, {
             mView.getItemFromRepo(it)
+        })
+        UserRepository.isCurrentUserAdmin(object : FirebaseAuthListener {
+            override fun onStart() {
+            }
+
+            override fun onSuccess() {
+                mView.makeFieldsClickable()
+            }
+
+            override fun onFailure() {
+                mView.makeFieldsUnclickable()
+            }
         })
     }
 
@@ -64,5 +90,9 @@ class UserPresenter(private val mView: UserContract.View) : UserContract.Present
         }
     }
 
+    override fun makeOrder() {
+        val item = mView.getSelectedItemForOrder()
+        mView.replaceWithOrderView(item)
+    }
 
 }

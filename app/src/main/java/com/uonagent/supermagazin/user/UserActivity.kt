@@ -11,6 +11,8 @@ import android.view.MenuItem
 import android.view.View
 import com.uonagent.supermagazin.R
 import com.uonagent.supermagazin.login.LoginActivity
+import com.uonagent.supermagazin.order.OrderActivity
+import com.uonagent.supermagazin.utils.ItemModel
 import com.uonagent.supermagazin.utils.UserViewType
 import com.uonagent.supermagazin.utils.removeShiftMode
 import kotlinx.android.synthetic.main.activity_user.*
@@ -33,19 +35,13 @@ class UserActivity : AppCompatActivity(), UserContract.View,
 
     private lateinit var mMenu: Menu
 
-    private var listItemArray: MutableList<ListItemModel>? = null
+    private var itemArray: MutableList<ItemModel>? = null
 
     private var selectedItemUid: String? = null
 
-    override fun getViewType(): UserViewType? {
-        val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_holder)
-        val currentFragmentTag = currentFragment.tag
-        return when (currentFragmentTag) {
-            SELECTED_ITEM_FRAGMENT_TAG -> UserViewType.LIST
-            ITEM_LIST_FRAGMENT_TAG -> UserViewType.LIST
-            else -> null
-        }
-    }
+    private var viewType: UserViewType? = null
+
+    override fun getViewType(): UserViewType? = viewType
 
     override fun makeFieldsClickable() {
         val f: (View?) -> Unit = {
@@ -70,40 +66,59 @@ class UserActivity : AppCompatActivity(), UserContract.View,
                 ?.changeClickability(f)
     }
 
+    private var isAddMenuItemVisible = false
+    private var isAcceptMenuItemVisible = false
+    private var isBuyMenuItemVisible = false
+
     override fun setAdminItemPermissions() {
-        makeAllMenuItemsInvisible()
-        mMenu.findItem(R.id.item_menu_accept).isVisible = true
+        isAddMenuItemVisible = false
+        isAcceptMenuItemVisible = true
+        isBuyMenuItemVisible = false
+        invalidateOptionsMenu()
+        setBottomNavigationInAdminMode()
     }
 
     override fun setAdminListPermissions() {
-        makeAllMenuItemsInvisible()
-        mMenu.findItem(R.id.item_menu_accept).isVisible = true
+        isAddMenuItemVisible = true
+        isAcceptMenuItemVisible = false
+        isBuyMenuItemVisible = false
+        invalidateOptionsMenu()
+        setBottomNavigationInAdminMode()
     }
 
     override fun setUserItemPermissions() {
-        makeAllMenuItemsInvisible()
-        mMenu.findItem(R.id.item_menu_buy).isVisible = true
+        isAddMenuItemVisible = false
+        isAcceptMenuItemVisible = false
+        isBuyMenuItemVisible = true
+        invalidateOptionsMenu()
+        setBottomNavigationInUserMode()
     }
 
     override fun setUserListPermissions() {
-        makeAllMenuItemsInvisible()
+        isAddMenuItemVisible = false
+        isAcceptMenuItemVisible = false
+        isBuyMenuItemVisible = false
+        invalidateOptionsMenu()
+        setBottomNavigationInUserMode()
     }
 
-    private fun makeAllMenuItemsInvisible() {
-        val array = arrayOf(
-                R.id.item_menu_accept,
-                R.id.item_menu_add,
-                R.id.item_menu_buy)
-        for (id in array) {
-            mMenu.findItem(id).isVisible = false
-        }
-    }
 
     override fun onItemClick(uid: String) {
         selectedItemUid = uid
         bottomNavigation.menu.findItem(R.id.user_menu_product).isEnabled = true
-        //bottomNavigation.findViewById<View>(R.id.user_menu_product).performClick()
+        bottomNavigation.menu.findItem(R.id.user_menu_product).isChecked = true
+
         mPresenter.onItemClick()
+    }
+
+    private fun setBottomNavigationInAdminMode() {
+        bottomNavigation.menu.findItem(R.id.user_menu_user).isEnabled = false
+        bottomNavigation.menu.findItem(R.id.user_menu_inbox).isEnabled = true
+    }
+
+    private fun setBottomNavigationInUserMode() {
+        bottomNavigation.menu.findItem(R.id.user_menu_user).isEnabled = true
+        bottomNavigation.menu.findItem(R.id.user_menu_inbox).isEnabled = false
     }
 
     override fun getItemUid() = selectedItemUid
@@ -116,19 +131,19 @@ class UserActivity : AppCompatActivity(), UserContract.View,
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun onFragmentViewCreated(list: MutableList<ListItemModel>) {
-        listItemArray = list
+    override fun onFragmentViewCreated(list: MutableList<ItemModel>) {
+        itemArray = list
         mPresenter.sendFullListUpdateRequest()
     }
 
-    override fun getListItemArray(): MutableList<ListItemModel>? {
-        return listItemArray
+    override fun getListItemArray(): MutableList<ItemModel>? {
+        return itemArray
     }
 
-    override fun setListItemArray(listItemArray: MutableList<ListItemModel>) {
-        Log.d(TAG, listItemArray.size.toString())
-        this.listItemArray?.clear()
-        this.listItemArray?.addAll(listItemArray)
+    override fun setListItemArray(itemArray: MutableList<ItemModel>) {
+        Log.d(TAG, itemArray.size.toString())
+        this.itemArray?.clear()
+        this.itemArray?.addAll(itemArray)
         notifyFragmentAboutListChange()
     }
 
@@ -155,10 +170,14 @@ class UserActivity : AppCompatActivity(), UserContract.View,
             BottomNavigationView.OnNavigationItemSelectedListener { item ->
                 when (item.itemId) {
                     R.id.user_menu_product -> {
+                        viewType = UserViewType.ITEM
+                        mPresenter.setAccessPermissions()
                         setFragment(SELECTED_ITEM_FRAGMENT_TAG)
                         return@OnNavigationItemSelectedListener true
                     }
                     R.id.user_menu_list -> {
+                        viewType = UserViewType.LIST
+                        mPresenter.setAccessPermissions()
                         setFragment(ITEM_LIST_FRAGMENT_TAG)
                         return@OnNavigationItemSelectedListener true
                     }
@@ -181,12 +200,20 @@ class UserActivity : AppCompatActivity(), UserContract.View,
         setContentView(R.layout.activity_user)
 
         mPresenter = UserPresenter(this)
+        bottomNavigationPrepare()
+        viewType = UserViewType.LIST
+        mPresenter.setAccessPermissions()
 
         toolBarPrepare()
 
-        bottomNavigationPrepare()
-
         setFragment(ITEM_LIST_FRAGMENT_TAG)
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        invalidateOptionsMenu()
     }
 
     private fun bottomNavigationPrepare() {
@@ -209,18 +236,19 @@ class UserActivity : AppCompatActivity(), UserContract.View,
             fragment = FragmentFactory.getFragmentByTag(tag)
         }
         if (!fragment.isAdded) {
-            ft.add(R.id.fragment_holder, fragment, tag)
+            ft.replace(R.id.fragment_holder, fragment, tag)
                     .addToBackStack(null)
                     .commit()
         }
-        //mPresenter.setAccessPermissions()
     }
 
-    override fun getItemFromRepo(item: ListItemModel?) {
+    override fun getItemFromRepo(item: ItemModel?) {
         startSelectedItemFragmentWithItem(item)
     }
 
-    private fun startSelectedItemFragmentWithItem(item: ListItemModel?) {
+    private fun startSelectedItemFragmentWithItem(item: ItemModel?) {
+        viewType = UserViewType.ITEM
+        mPresenter.setAccessPermissions()
         selectedItemFragment = SelectedItemFragment.newInstance(item)
         supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_holder, selectedItemFragment, SELECTED_ITEM_FRAGMENT_TAG)
@@ -229,14 +257,33 @@ class UserActivity : AppCompatActivity(), UserContract.View,
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item?.itemId) {
+        return when (item?.itemId) {
+            R.id.item_menu_add -> {
+                true
+            }
+            R.id.item_menu_accept -> {
+                true
+            }
             R.id.item_menu_buy -> {
-                return true
+                mPresenter.makeOrder()
+                true
             }
             else -> {
-                return super.onOptionsItemSelected(item)
+                super.onOptionsItemSelected(item)
             }
         }
+    }
+
+    override fun getSelectedItemForOrder(): ItemModel? {
+        selectedItemFragment = supportFragmentManager
+                .findFragmentByTag(SELECTED_ITEM_FRAGMENT_TAG) as SelectedItemFragment?
+        return selectedItemFragment?.getModel()
+    }
+
+    override fun replaceWithOrderView(item: ItemModel?) {
+        val intent = Intent(this, OrderActivity::class.java)
+        intent.putExtra(MODEL, item)
+        startActivity(intent)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -248,17 +295,35 @@ class UserActivity : AppCompatActivity(), UserContract.View,
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_selected_item, menu)
 
-        mMenu = menu!!
+        return true
+    }
+
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        setVisibilityForMenuItems(menu)
 
         return true
     }
 
-    override fun onBackPressed() {
-        if (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStack()
-        } else {
-            moveTaskToBack(true)
+    private fun setVisibilityForMenuItems(menu: Menu?) {
+        val idArr = arrayOf(
+                R.id.item_menu_accept,
+                R.id.item_menu_add,
+                R.id.item_menu_buy
+        )
+        val visibleArr = arrayOf(
+                isAcceptMenuItemVisible,
+                isAddMenuItemVisible,
+                isBuyMenuItemVisible
+        )
+        if (menu != null) {
+            for (i in idArr.indices) {
+                menu.findItem(idArr[i]).isVisible = visibleArr[i]
+            }
         }
+    }
+
+    override fun onBackPressed() {
+        moveTaskToBack(false)
     }
 
     override fun onStart() {

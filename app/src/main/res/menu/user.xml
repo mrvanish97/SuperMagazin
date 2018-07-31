@@ -18,6 +18,11 @@
         android:title="@string/user_menu_user"
         app:showAsAction="always|withText" />
     <item
+        android:id="@+id/user_menu_inbox"
+        android:icon="@drawable/ic_inbox_24dp"
+        android:title="@string/user_menu_inbox"
+        app:showAsAction="always|withText" />
+    <item
         android:id="@+id/user_menu_exit"
         android:icon="@drawable/ic_logout_24dp"
         android:title="@string/user_menu_logout"

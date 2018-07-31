@@ -10,11 +10,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.uonagent.supermagazin.R
-import com.uonagent.supermagazin.user.ListItemModel
 
 private const val TAG = "Repository"
 
 open class Repository : Contract.Repository {
+    override fun isUserAnon(): Boolean {
+        return mAuth.currentUser!!.isAnonymous
+    }
+
     override fun signOut() {
         mAuth.signOut()
     }
@@ -80,7 +83,7 @@ open class Repository : Contract.Repository {
         db.collection("items").get().addOnCompleteListener {
             if (it.isSuccessful) {
                 for (document in it.result) {
-                    val item = document.toObject(ListItemModel::class.java)
+                    val item = document.toObject(ItemModel::class.java)
                     listener.onAdd(item)
                 }
                 listener.onFinish()
@@ -94,26 +97,27 @@ open class Repository : Contract.Repository {
         db.collection("items").get()
     }
 
-    override fun currentUserIsAdmin() = isAdminQuery { return@isAdminQuery it }
-
-    private fun isAdminQuery(f: (Boolean) -> Boolean): Boolean {
+    override fun isCurrentUserAdmin(listener: FirebaseAuthListener) {
         db.collection("users").whereEqualTo("uid", mAuth.uid).get().addOnCompleteListener {
             if (it.isSuccessful) {
                 for (doc in it.result) {
                     val type = doc["type"] as String
-                    f(type.equals("admin", false))
+                    if (type == "admin") {
+                        listener.onSuccess()
+                    } else {
+                        listener.onFailure()
+                        Log.d(TAG, "THIS USER ISN'T AN ADMIN")
+                    }
                 }
             }
         }
-
-        return false
     }
 
-    override fun getItemById(uid: String?, f: (ListItemModel?) -> Unit) {
+    override fun getItemById(uid: String?, f: (ItemModel?) -> Unit) {
         if (uid != null) {
             db.collection("items").document(uid).get().addOnCompleteListener {
                 if (it.isSuccessful) {
-                    val item = it.result.toObject(ListItemModel::class.java)
+                    val item = it.result.toObject(ItemModel::class.java)
                     f(item)
                 }
             }

@@ -28,4 +28,8 @@
     <string name="item_menu_edit">Edit</string>
     <string name="item_menu_add">Add</string>
     <string name="item_menu_accept">Accept</string>
+    <string name="user_menu_inbox">Inbox</string>
+    <string name="order_name">Name</string>
+    <string name="order_email">Email</string>
+    <string name="order_details">Order Detalis</string>
 </resources>

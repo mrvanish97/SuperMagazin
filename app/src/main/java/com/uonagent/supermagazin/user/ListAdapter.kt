@@ -9,10 +9,11 @@ import android.widget.ImageView
 import android.widget.TextView
 import com.uonagent.supermagazin.R
 import com.uonagent.supermagazin.utils.CurrencyFormatter
+import com.uonagent.supermagazin.utils.ItemModel
 import kotlinx.android.synthetic.main.list_item.view.*
 
 
-class ListAdapter(private val list: List<ListItemModel>, private val context: Context?) :
+class ListAdapter(private val list: List<ItemModel>, private val context: Context?) :
         RecyclerView.Adapter<ListAdapter.ListViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListViewHolder {

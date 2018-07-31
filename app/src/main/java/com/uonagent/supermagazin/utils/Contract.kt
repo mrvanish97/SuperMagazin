@@ -2,7 +2,6 @@ package com.uonagent.supermagazin.utils
 
 import android.content.Context
 import android.widget.ImageView
-import com.uonagent.supermagazin.user.ListItemModel
 
 interface Contract {
     
@@ -20,7 +19,8 @@ interface Contract {
         fun addItemListListener(listener: FirebaseListListener)
         fun reloadItemList(listener: FirebaseListListener)
         fun loadItemPhotoFromStorage(url: String?, dest: ImageView?, context: Context?)
-        fun currentUserIsAdmin(): Boolean
-        fun getItemById(uid: String?, f: (ListItemModel?) -> Unit)
+        fun isCurrentUserAdmin(listener: FirebaseAuthListener)
+        fun getItemById(uid: String?, f: (ItemModel?) -> Unit)
+        fun isUserAnon(): Boolean
     }
 }

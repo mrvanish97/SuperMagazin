@@ -8,17 +8,17 @@
         android:icon="@drawable/ic_shopping_cart_24dp"
         android:title="@string/item_menu_buy"
         android:visible="false"
-        app:showAsAction="ifRoom|withText" />
+        app:showAsAction="always|withText" />
     <item
         android:id="@+id/item_menu_add"
         android:icon="@drawable/ic_add_circle_24dp"
         android:title="@string/item_menu_add"
         android:visible="false"
-        app:showAsAction="ifRoom|withText" />
+        app:showAsAction="always|withText" />
     <item
         android:id="@+id/item_menu_accept"
         android:icon="@drawable/ic_check_24dp"
         android:title="@string/item_menu_accept"
         android:visible="false"
-        app:showAsAction="ifRoom|withText" />
+        app:showAsAction="always|withText" />
 </menu>

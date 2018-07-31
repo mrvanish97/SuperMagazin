@@ -10,9 +10,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.uonagent.supermagazin.R
+import com.uonagent.supermagazin.utils.ItemModel
 import com.uonagent.supermagazin.utils.RecyclerItemClickListener
 import kotlinx.android.synthetic.main.fragment_list.view.*
-import java.text.FieldPosition
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -33,7 +33,7 @@ class ItemListFragment : Fragment() {
     private lateinit var mAdapter: ListAdapter
 
     private lateinit var mRecyclerView: RecyclerView
-    private lateinit var list: MutableList<ListItemModel>
+    private lateinit var list: MutableList<ItemModel>
 
     // Following field is being saved but not restored idk why
     private var position = -1
@@ -106,7 +106,7 @@ class ItemListFragment : Fragment() {
     }
 
     interface OnFragmentInteractionListener {
-        fun onFragmentViewCreated(list: MutableList<ListItemModel>)
+        fun onFragmentViewCreated(list: MutableList<ItemModel>)
         fun onItemClick(uid: String)
         fun onItemLongClick(uid: String)
     }

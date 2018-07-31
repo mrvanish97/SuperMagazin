@@ -12,7 +12,7 @@ import android.widget.TextView
 
 import com.uonagent.supermagazin.R
 import com.uonagent.supermagazin.utils.CurrencyFormatter
-import com.uonagent.supermagazin.utils.Repository
+import com.uonagent.supermagazin.utils.ItemModel
 import kotlinx.android.synthetic.main.fragment_selected_item.view.*
 import kotlinx.android.synthetic.main.list_item.view.*
 
@@ -22,7 +22,7 @@ class SelectedItemFragment : Fragment() {
 
     private var listener: OnFragmentInteractionListener? = null
 
-    private var model: ListItemModel? = null
+    private var model: ItemModel? = null
 
     private lateinit var itemPhoto: ImageView
     private lateinit var itemTitle: TextView
@@ -38,6 +38,10 @@ class SelectedItemFragment : Fragment() {
                 model = it.getParcelable(MODEL)
             }
         }
+    }
+
+    fun getModel(): ItemModel? {
+        return model
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -61,7 +65,7 @@ class SelectedItemFragment : Fragment() {
         draw(model)
     }
 
-    private fun draw(model: ListItemModel?) {
+    private fun draw(model: ItemModel?) {
         val item = model ?: defaultItem
         UserRepository.loadItemPhotoFromStorage(item.photo, itemPhoto, context)
         itemCost.text = CurrencyFormatter.doubleToString(item.cost)
@@ -124,14 +128,14 @@ class SelectedItemFragment : Fragment() {
          */
         // TODO: Rename and change types and number of parameters
         @JvmStatic
-        fun newInstance(model: ListItemModel?) =
+        fun newInstance(model: ItemModel?) =
                 SelectedItemFragment().apply {
                     arguments = Bundle().apply {
                         putParcelable(MODEL, model)
                     }
                 }
 
-        private val defaultItem = ListItemModel("Title", 0.0, "Description", "", "")
+        private val defaultItem = ItemModel("Title", 0.0, "Description", "", "")
     }
 
 
