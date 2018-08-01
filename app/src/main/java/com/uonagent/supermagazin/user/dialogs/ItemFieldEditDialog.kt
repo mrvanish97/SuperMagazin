@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.design.widget.TextInputLayout
 import android.support.v4.app.DialogFragment
-import android.util.Log
 import android.view.View
 import android.widget.EditText
 import com.uonagent.supermagazin.R
@@ -16,7 +15,7 @@ import com.uonagent.supermagazin.utils.enums.ItemEditFields
 private const val TYPE_TAG = "type"
 private const val DATA_TAG = "data"
 
-class ItemFieldEditDialog : DialogFragment(), DialogInterface.OnShowListener {
+class ItemFieldEditDialog : DialogFragment(), DialogInterface.OnClickListener {
 
     companion object {
 
@@ -73,21 +72,21 @@ class ItemFieldEditDialog : DialogFragment(), DialogInterface.OnShowListener {
         return AlertDialog.Builder(activity)
                 .setTitle(mType)
                 .setView(v)
-                .setNeutralButton(R.string.dialog_cancel, null)
-                .setPositiveButton(R.string.dialog_apply, null)
+                .setNeutralButton(R.string.dialog_cancel, this)
+                .setPositiveButton(R.string.dialog_apply, this)
                 .create()
     }
 
-    override fun onShow(p0: DialogInterface?) {
-        val button = (dialog as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
-        button.setOnClickListener {
-            mData = mEditText.text.toString()
-            if (!mData.isBlank()) {
-                Log.d("DDDDDDDDDDD", "DDDDDDDDDD")
-                mCallback?.onApplyClick(mData)
-                dialog.dismiss()
-            } else {
-                setEmptyFieldError()
+    override fun onClick(dialog: DialogInterface?, where: Int) {
+        when (where) {
+            Dialog.BUTTON_POSITIVE -> {
+                mData = mEditText.text.toString()
+                if (!mData.isBlank()) {
+                    mCallback?.onApplyClick(mData)
+                    dismiss()
+                } else {
+                    setEmptyFieldError()
+                }
             }
         }
     }

@@ -145,8 +145,7 @@ class SelectedItemFragment : Fragment() {
 
     fun reloadItem(item: ItemModel?) {
         if (item != null) {
-            mItem = item
-            draw(mItem)
+            draw(item)
         }
     }
 

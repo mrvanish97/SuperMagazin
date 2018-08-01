@@ -33,5 +33,6 @@ interface Contract {
         fun addItem(item: ItemModel, listener: FirebaseEditListener)
         fun updateItem(item: ItemModel, listener: FirebaseEditListener)
         fun removeItem(uid: String, listener: FirebaseEditListener)
+        fun loadImageToStorage(url: String, uid: String, listener: (String) -> Unit)
     }
 }

@@ -100,8 +100,28 @@ class UserPresenter(private val mView: UserContract.View) : UserContract.Present
         mView.replaceWithOrderView(item)
     }
 
-    override fun addOrUpdateItem() {
+    override fun addItem() {
+        updateItem()
+    }
+
+    override fun updateItem() {
+
         val item = mView.getSelectedItem()
+        if (item != null) {
+            if (mView.getPhotoWasChanged()) {
+                UserRepository.loadImageToStorage(item.photo, item.uid, {
+                    item.photo = it
+                    Log.d(TAG, it)
+                    addOrUpdateItem(item)
+                })
+            } else {
+                addOrUpdateItem(item)
+            }
+        }
+    }
+
+
+    private fun addOrUpdateItem(item: ItemModel) {
 
         val listener = object : FirebaseEditListener {
             override fun onSuccess() {
@@ -127,14 +147,14 @@ class UserPresenter(private val mView: UserContract.View) : UserContract.Present
         val uid = mView.getSelectedItemForRemoveUid()
         if (uid != null) {
             UserRepository.removeItem(uid, object : FirebaseEditListener {
-                        override fun onSuccess() {
-                            mView.showInfoMessage(SUCCESS_MESSAGE)
-                        }
+                override fun onSuccess() {
+                    mView.showInfoMessage(SUCCESS_MESSAGE)
+                }
 
-                        override fun onFailure(message: String) {
-                            mView.showErrorMessage(FAILURE_MESSAGE)
-                        }
-                    })
+                override fun onFailure(message: String) {
+                    mView.showErrorMessage(FAILURE_MESSAGE)
+                }
+            })
         } else {
             mView.showErrorMessage(FAILURE_MESSAGE)
         }

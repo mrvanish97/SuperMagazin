@@ -2,6 +2,8 @@ package com.uonagent.supermagazin.utils
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.util.Log
 import android.widget.ImageView
 import com.bumptech.glide.Glide
@@ -10,12 +12,16 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import com.squareup.picasso.Picasso
+import com.squareup.picasso.Target
 import com.uonagent.supermagazin.R
 import com.uonagent.supermagazin.utils.listeners.FirebaseEditListener
 import com.uonagent.supermagazin.utils.listeners.FirebaseAuthListener
 import com.uonagent.supermagazin.utils.listeners.FirebaseListListener
 import com.uonagent.supermagazin.utils.models.ItemModel
 import com.uonagent.supermagazin.utils.models.OrderModel
+import java.io.ByteArrayOutputStream
+
 
 private const val TAG = "Repository"
 
@@ -58,14 +64,18 @@ open class Repository : Contract.Repository {
 
     override fun loadItemPhotoFromStorage(url: String?, dest: ImageView?, context: Context?) {
         if (url != null && url != "") {
-            val storageRef = url.let { storage.getReferenceFromUrl(it) }
-            val size = getItemPhotoDp(context).toDp()
-            Glide.with(context)
-                    .using(FirebaseImageLoader())
-                    .load(storageRef)
-                    .centerCrop()
-                    .override(size, size)
-                    .into(dest)
+            try {
+                val storageRef = url.let { storage.getReferenceFromUrl(it) }
+                val size = getItemPhotoDp(context).toDp()
+                Glide.with(context)
+                        .using(FirebaseImageLoader())
+                        .load(storageRef)
+                        .centerCrop()
+                        .override(size, size)
+                        .into(dest)
+            } catch (e: IllegalArgumentException) {
+
+            }
         }
     }
 
@@ -181,5 +191,43 @@ open class Repository : Contract.Repository {
         }.addOnFailureListener {
             listener.onFailure(UNKNOWN_ERROR_MESSAGE)
         }
+    }
+
+    private fun loadPhoto(url: String?, f: (Bitmap?) -> Unit) {
+        if (url != null && url != "") {
+            Picasso.get().load(url).into(object : Target {
+                override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+                    Log.d(TAG, "Prepare")
+                }
+
+                override fun onBitmapFailed(e: java.lang.Exception?, errorDrawable: Drawable?) {
+                    Log.d(TAG, "Fail")
+                }
+
+                override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+                    Log.d(TAG, bitmap.toString())
+                    f(bitmap)
+
+                }
+
+            })
+        }
+    }
+
+    override fun loadImageToStorage(url: String, uid: String, listener: (String) -> Unit) {
+        val storageRef = storage.reference
+        val imageRef = storageRef.child("item_images/$uid.jpg")
+        loadPhoto(url, {
+            val stream = ByteArrayOutputStream()
+            it?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+            val byteArray = stream.toByteArray()
+            val uploadTask = imageRef.putBytes(byteArray)
+
+            uploadTask.addOnSuccessListener {
+                val storageUrl = "gs://${it.metadata!!.bucket!!}/${it.metadata!!.path}"
+                Log.d(TAG, storageUrl)
+                listener.invoke(storageUrl)
+            }
+        })
     }
 }

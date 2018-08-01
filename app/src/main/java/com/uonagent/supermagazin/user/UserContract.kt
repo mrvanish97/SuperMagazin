@@ -30,6 +30,8 @@ interface UserContract : Contract {
         fun getSelectedItemForRemoveUid(): String?
         fun showDialog(dialog: DialogFragment)
         fun getDialogCreator(): DialogCreator
+        fun getPhotoWasChanged(): Boolean
+        fun setPhotoWasNotChanged()
     }
 
     interface Presenter : Contract.Presenter {
@@ -40,7 +42,8 @@ interface UserContract : Contract {
         fun onItemClick()
         fun setAccessPermissions()
         fun makeOrder()
-        fun addOrUpdateItem()
+        fun addItem()
+        fun updateItem()
         fun removeItem()
         fun openDialog()
     }

@@ -57,6 +57,14 @@ class UserActivity : AppCompatActivity(), UserContract.View,
 
     private var viewType: UserViewType? = null
 
+    private var photoWasChanged: Boolean = false
+
+    override fun getPhotoWasChanged() = photoWasChanged
+
+    override fun setPhotoWasNotChanged() {
+        photoWasChanged = false
+    }
+
     override fun onYesClick() {
         mPresenter.removeItem()
     }
@@ -67,6 +75,12 @@ class UserActivity : AppCompatActivity(), UserContract.View,
                 ItemEditFields.TITLE -> selectedItem!!.title = data
                 ItemEditFields.COST -> selectedItem!!.cost = CurrencyFormatter.valueStringToValue(data)
                 ItemEditFields.DESCRIPTION -> selectedItem!!.description = data
+                ItemEditFields.PHOTO -> {
+                    if (selectedItem!!.photo != data) {
+                        selectedItem!!.photo = data
+                        photoWasChanged = true
+                    }
+                }
             }
         }
 
@@ -74,12 +88,11 @@ class UserActivity : AppCompatActivity(), UserContract.View,
                 .findFragmentByTag(SELECTED_ITEM_FRAGMENT_TAG) as SelectedItemFragment?
 
         selectedItemFragment?.reloadItem(selectedItem)
-
-        mPresenter.addOrUpdateItem()
     }
 
     override fun onPhotoClick() {
-
+        fieldType = ItemEditFields.PHOTO
+        onTextClick(selectedItem?.photo ?: "")
     }
 
     private fun onTextClick(data: String) {
@@ -369,7 +382,11 @@ class UserActivity : AppCompatActivity(), UserContract.View,
                 true
             }
             R.id.item_menu_accept -> {
-                mPresenter.addOrUpdateItem()
+                if (selectedItem?.uid.isNullOrBlank()) {
+                    mPresenter.addItem()
+                } else {
+                    mPresenter.updateItem()
+                }
                 true
             }
             R.id.item_menu_buy -> {
@@ -449,6 +466,7 @@ class UserActivity : AppCompatActivity(), UserContract.View,
         startActivity(intent)
         finish()
     }
+
 }
 
 object FragmentFactory {
