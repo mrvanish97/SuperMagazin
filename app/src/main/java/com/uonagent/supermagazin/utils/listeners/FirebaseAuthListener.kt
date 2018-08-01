@@ -1,4 +1,4 @@
-package com.uonagent.supermagazin.utils
+package com.uonagent.supermagazin.utils.listeners
 
 interface FirebaseAuthListener {
     fun onStart()

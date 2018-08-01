@@ -1,45 +1,106 @@
 package com.uonagent.supermagazin.user
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView
+import android.support.v4.app.DialogFragment
+import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import com.uonagent.supermagazin.R
 import com.uonagent.supermagazin.login.LoginActivity
 import com.uonagent.supermagazin.order.OrderActivity
-import com.uonagent.supermagazin.utils.ItemModel
-import com.uonagent.supermagazin.utils.UserViewType
+import com.uonagent.supermagazin.user.dialogs.*
+import com.uonagent.supermagazin.user.fragments.ItemListFragment
+import com.uonagent.supermagazin.user.fragments.SelectedItemFragment
+import com.uonagent.supermagazin.utils.CurrencyFormatter
+import com.uonagent.supermagazin.utils.enums.ItemEditFields
+import com.uonagent.supermagazin.utils.models.ItemModel
+import com.uonagent.supermagazin.utils.enums.UserViewType
 import com.uonagent.supermagazin.utils.removeShiftMode
 import kotlinx.android.synthetic.main.activity_user.*
 
 private const val ITEM_LIST_FRAGMENT_TAG = "list"
 private const val SELECTED_ITEM_FRAGMENT_TAG = "selected"
 
-private const val MODEL = "model"
+private const val DIALOG_TAG = "dialog"
+
+private const val MODEL_INTENT_TAG = "model"
 
 private const val TAG = "UserActivity"
 
 class UserActivity : AppCompatActivity(), UserContract.View,
         ItemListFragment.OnFragmentInteractionListener,
-        SelectedItemFragment.OnFragmentInteractionListener {
+        SelectedItemFragment.OnFragmentInteractionListener,
+        ItemRemoveDialog.OnFragmentInteractionListener,
+        ItemFieldEditDialog.OnFragmentInteractionListener {
 
     private var itemListFragment: ItemListFragment? = null
     private var selectedItemFragment: SelectedItemFragment? = null
+
+    private lateinit var dialogCreator: DialogCreator
 
     private lateinit var bottomNavigation: BottomNavigationView
 
     private lateinit var mMenu: Menu
 
+    private var fieldType: ItemEditFields = ItemEditFields.NULL
+
     private var itemArray: MutableList<ItemModel>? = null
 
-    private var selectedItemUid: String? = null
+    private var selectedItem: ItemModel? = null
+    private var selectedItemForRemoveUid: String? = null
 
     private var viewType: UserViewType? = null
+
+    override fun onYesClick() {
+        mPresenter.removeItem()
+    }
+
+    override fun onApplyClick(data: String) {
+        if (selectedItem != null) {
+            when (fieldType) {
+                ItemEditFields.TITLE -> selectedItem!!.title = data
+                ItemEditFields.COST -> selectedItem!!.cost = CurrencyFormatter.valueStringToValue(data)
+                ItemEditFields.DESCRIPTION -> selectedItem!!.description = data
+            }
+        }
+
+        selectedItemFragment = supportFragmentManager
+                .findFragmentByTag(SELECTED_ITEM_FRAGMENT_TAG) as SelectedItemFragment?
+
+        selectedItemFragment?.reloadItem(selectedItem)
+
+        mPresenter.addOrUpdateItem()
+    }
+
+    override fun onPhotoClick() {
+
+    }
+
+    private fun onTextClick(data: String) {
+        dialogCreator = ItemFieldEditDialogCreator(fieldType, data)
+        mPresenter.openDialog()
+    }
+
+    override fun onTitleClick(data: String) {
+        fieldType = ItemEditFields.TITLE
+        onTextClick(data)
+    }
+
+    override fun onCostClick(data: String) {
+        fieldType = ItemEditFields.COST
+        onTextClick(CurrencyFormatter.stringToValueString(data))
+    }
+
+    override fun onDescriptionClick(data: String) {
+        fieldType = ItemEditFields.DESCRIPTION
+        onTextClick(data)
+    }
 
     override fun getViewType(): UserViewType? = viewType
 
@@ -47,6 +108,7 @@ class UserActivity : AppCompatActivity(), UserContract.View,
         val f: (View?) -> Unit = {
             if (it != null) {
                 it.isClickable = true
+                it.isFocusable = true
             }
         }
         makeFields(f)
@@ -56,15 +118,23 @@ class UserActivity : AppCompatActivity(), UserContract.View,
         val f: (View?) -> Unit = {
             if (it != null) {
                 it.isClickable = false
+                it.isFocusable = false
             }
         }
         makeFields(f)
     }
 
+    override fun showInfoMessage(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
+
+
     private fun makeFields(f: (View?) -> Unit) {
         (supportFragmentManager.findFragmentByTag(SELECTED_ITEM_FRAGMENT_TAG) as SelectedItemFragment?)
                 ?.changeClickability(f)
     }
+
+    private var isSelectedItemFragmentEmpty: Boolean = true
 
     private var isAddMenuItemVisible = false
     private var isAcceptMenuItemVisible = false
@@ -102,9 +172,9 @@ class UserActivity : AppCompatActivity(), UserContract.View,
         setBottomNavigationInUserMode()
     }
 
+    override fun onItemClick(item: ItemModel) {
+        selectedItem = item
 
-    override fun onItemClick(uid: String) {
-        selectedItemUid = uid
         bottomNavigation.menu.findItem(R.id.user_menu_product).isEnabled = true
         bottomNavigation.menu.findItem(R.id.user_menu_product).isChecked = true
 
@@ -113,22 +183,38 @@ class UserActivity : AppCompatActivity(), UserContract.View,
 
     private fun setBottomNavigationInAdminMode() {
         bottomNavigation.menu.findItem(R.id.user_menu_user).isEnabled = false
-        bottomNavigation.menu.findItem(R.id.user_menu_inbox).isEnabled = true
     }
 
     private fun setBottomNavigationInUserMode() {
-        bottomNavigation.menu.findItem(R.id.user_menu_user).isEnabled = true
-        bottomNavigation.menu.findItem(R.id.user_menu_inbox).isEnabled = false
+        bottomNavigation.menu.findItem(R.id.user_menu_user).isEnabled = false
     }
 
-    override fun getItemUid() = selectedItemUid
+    override fun getItem() = if (selectedItemFragment != null) {
+        selectedItemFragment!!.getItem()
+    } else {
+        SelectedItemFragment.getDefaultItem()
+    }
+
+    override fun getSelectedItem() = selectedItem
 
     override fun onItemLongClick(uid: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        selectedItemForRemoveUid = uid
+        dialogCreator = ItemRemoveDialogCreator()
+        mPresenter.openDialog()
     }
 
-    override fun onFragmentInteraction(uri: Uri) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun getDialogCreator() = dialogCreator
+
+    override fun showDialog(dialog: DialogFragment) {
+        dialog.show(supportFragmentManager, DIALOG_TAG)
+    }
+
+    override fun onFragmentIsEmpty(state: Boolean) {
+        setTitle(if (state) {
+            R.string.user_title_add
+        } else {
+            R.string.user_title_edit
+        })
     }
 
     override fun onFragmentViewCreated(list: MutableList<ItemModel>) {
@@ -153,7 +239,7 @@ class UserActivity : AppCompatActivity(), UserContract.View,
     }
 
     override fun showErrorMessage(message: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
     override fun setLoadingLayout() {
@@ -173,12 +259,25 @@ class UserActivity : AppCompatActivity(), UserContract.View,
                         viewType = UserViewType.ITEM
                         mPresenter.setAccessPermissions()
                         setFragment(SELECTED_ITEM_FRAGMENT_TAG)
+
+                        selectedItemFragment = supportFragmentManager
+                                .findFragmentByTag(SELECTED_ITEM_FRAGMENT_TAG) as SelectedItemFragment?
+
+                        if (selectedItemFragment != null) {
+                            setTitle(if (selectedItemFragment!!.isEmpty()) {
+                                R.string.user_title_add
+                            } else {
+                                R.string.user_title_edit
+                            })
+                        }
+
                         return@OnNavigationItemSelectedListener true
                     }
                     R.id.user_menu_list -> {
                         viewType = UserViewType.LIST
                         mPresenter.setAccessPermissions()
                         setFragment(ITEM_LIST_FRAGMENT_TAG)
+                        setTitle(R.string.title_activity_user)
                         return@OnNavigationItemSelectedListener true
                     }
                     R.id.user_menu_user -> {
@@ -202,9 +301,10 @@ class UserActivity : AppCompatActivity(), UserContract.View,
         mPresenter = UserPresenter(this)
         bottomNavigationPrepare()
         viewType = UserViewType.LIST
-        mPresenter.setAccessPermissions()
 
         toolBarPrepare()
+
+        mPresenter.setAccessPermissions()
 
         setFragment(ITEM_LIST_FRAGMENT_TAG)
 
@@ -230,15 +330,12 @@ class UserActivity : AppCompatActivity(), UserContract.View,
 
     private fun setFragment(tag: String) {
         val fm = supportFragmentManager
-        val ft = fm.beginTransaction()
         var fragment = fm.findFragmentByTag(tag)
         if (fragment == null) {
             fragment = FragmentFactory.getFragmentByTag(tag)
         }
         if (!fragment.isAdded) {
-            ft.replace(R.id.fragment_holder, fragment, tag)
-                    .addToBackStack(null)
-                    .commit()
+            setFragment(fragment, tag)
         }
     }
 
@@ -250,8 +347,12 @@ class UserActivity : AppCompatActivity(), UserContract.View,
         viewType = UserViewType.ITEM
         mPresenter.setAccessPermissions()
         selectedItemFragment = SelectedItemFragment.newInstance(item)
+        setFragment(selectedItemFragment, SELECTED_ITEM_FRAGMENT_TAG)
+    }
+
+    private fun setFragment(fragment: Fragment?, tag: String) {
         supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_holder, selectedItemFragment, SELECTED_ITEM_FRAGMENT_TAG)
+                .replace(R.id.fragment_holder, fragment, tag)
                 .addToBackStack(null)
                 .commit()
     }
@@ -259,9 +360,16 @@ class UserActivity : AppCompatActivity(), UserContract.View,
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         return when (item?.itemId) {
             R.id.item_menu_add -> {
+                selectedItemFragment = SelectedItemFragment()
+                setFragment(selectedItemFragment, SELECTED_ITEM_FRAGMENT_TAG)
+                bottomNavigation.menu.findItem(R.id.user_menu_product).isEnabled = true
+                bottomNavigation.findViewById<View>(R.id.user_menu_product).performClick()
+                viewType = UserViewType.ITEM
+                mPresenter.setAccessPermissions()
                 true
             }
             R.id.item_menu_accept -> {
+                mPresenter.addOrUpdateItem()
                 true
             }
             R.id.item_menu_buy -> {
@@ -277,19 +385,23 @@ class UserActivity : AppCompatActivity(), UserContract.View,
     override fun getSelectedItemForOrder(): ItemModel? {
         selectedItemFragment = supportFragmentManager
                 .findFragmentByTag(SELECTED_ITEM_FRAGMENT_TAG) as SelectedItemFragment?
-        return selectedItemFragment?.getModel()
+        return selectedItemFragment?.getItem()
     }
+
+    override fun getSelectedItemForRemoveUid() = selectedItemForRemoveUid
 
     override fun replaceWithOrderView(item: ItemModel?) {
         val intent = Intent(this, OrderActivity::class.java)
-        intent.putExtra(MODEL, item)
+        intent.putExtra(MODEL_INTENT_TAG, item)
         startActivity(intent)
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
 
-        itemListFragment
+        selectedItemFragment = supportFragmentManager.findFragmentByTag(SELECTED_ITEM_FRAGMENT_TAG) as SelectedItemFragment?
+        itemListFragment = supportFragmentManager.findFragmentByTag(ITEM_LIST_FRAGMENT_TAG) as ItemListFragment?
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -321,6 +433,7 @@ class UserActivity : AppCompatActivity(), UserContract.View,
             }
         }
     }
+
 
     override fun onBackPressed() {
         moveTaskToBack(false)

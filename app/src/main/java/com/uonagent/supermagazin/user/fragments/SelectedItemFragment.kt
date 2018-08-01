@@ -1,7 +1,6 @@
-package com.uonagent.supermagazin.user
+package com.uonagent.supermagazin.user.fragments
 
 import android.content.Context
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
@@ -11,18 +10,22 @@ import android.widget.ImageView
 import android.widget.TextView
 
 import com.uonagent.supermagazin.R
+import com.uonagent.supermagazin.user.UserActivity
+import com.uonagent.supermagazin.user.UserRepository
 import com.uonagent.supermagazin.utils.CurrencyFormatter
-import com.uonagent.supermagazin.utils.ItemModel
+import com.uonagent.supermagazin.utils.models.ItemModel
 import kotlinx.android.synthetic.main.fragment_selected_item.view.*
 import kotlinx.android.synthetic.main.list_item.view.*
 
 private const val MODEL = "model"
 
+private const val TAG = "SelectedItemFragment"
+
 class SelectedItemFragment : Fragment() {
 
-    private var listener: OnFragmentInteractionListener? = null
+    private var mCallback: OnFragmentInteractionListener? = null
 
-    private var model: ItemModel? = null
+    private lateinit var mItem: ItemModel
 
     private lateinit var itemPhoto: ImageView
     private lateinit var itemTitle: TextView
@@ -31,25 +34,31 @@ class SelectedItemFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        mItem = defaultItem
+
         if (savedInstanceState != null) {
-            model = savedInstanceState.getParcelable(MODEL)
+            mItem = savedInstanceState.getParcelable(MODEL)
         } else {
             arguments?.let {
-                model = it.getParcelable(MODEL)
+                mItem = it.getParcelable(MODEL)
             }
         }
+
+        mCallback = context as UserActivity
+        (mCallback as UserActivity).onFragmentIsEmpty(mItem.uid.isBlank())
     }
 
-    fun getModel(): ItemModel? {
-        return model
-    }
+    fun isEmpty() = mItem.uid.isBlank()
+
+    fun getItem() = mItem
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_selected_item, container, false)
 
-        /*if (savedInstanceState != null && model == null) {
-            model = savedInstanceState.getParcelable(MODEL)
+        /*if (savedInstanceState != null && mItem == null) {
+            mItem = savedInstanceState.getParcelable(MODEL_INTENT_TAG)
         }
 */
         itemPhoto = view.item_photo
@@ -57,24 +66,40 @@ class SelectedItemFragment : Fragment() {
         itemCost = view.item_cost
         itemDesc = view.item_desc
 
+        setOnClickListeners()
+
         return view
+    }
+
+    private fun setOnClickListeners() {
+        itemPhoto.setOnClickListener {
+            mCallback?.onPhotoClick()
+        }
+        itemTitle.setOnClickListener {
+            mCallback?.onTitleClick(itemTitle.text.toString())
+        }
+        itemCost.setOnClickListener {
+            mCallback?.onCostClick(itemCost.text.toString())
+        }
+        itemDesc.setOnClickListener {
+            mCallback?.onDescriptionClick(itemDesc.text.toString())
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        draw(model)
+        draw(mItem)
     }
 
-    private fun draw(model: ItemModel?) {
-        val item = model ?: defaultItem
-        UserRepository.loadItemPhotoFromStorage(item.photo, itemPhoto, context)
-        itemCost.text = CurrencyFormatter.doubleToString(item.cost)
-        itemDesc.text = item.description
-        itemTitle.text = item.title
+    private fun draw(model: ItemModel) {
+        UserRepository.loadItemPhotoFromStorage(model.photo, itemPhoto, context)
+        itemCost.text = CurrencyFormatter.doubleToString(model.cost)
+        itemDesc.text = model.description
+        itemTitle.text = model.title
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putParcelable(MODEL, model)
+        outState.putParcelable(MODEL, mItem)
     }
 
     fun changeClickability(f: (View?) -> Unit) {
@@ -83,14 +108,10 @@ class SelectedItemFragment : Fragment() {
         }
     }
 
-    fun onButtonPressed(uri: Uri) {
-        listener?.onFragmentInteraction(uri)
-    }
-
     override fun onAttach(context: Context) {
         super.onAttach(context)
         if (context is OnFragmentInteractionListener) {
-            listener = context
+            mCallback = context
         } else {
             throw RuntimeException(context.toString() + " must implement OnFragmentInteractionListener")
         }
@@ -98,7 +119,7 @@ class SelectedItemFragment : Fragment() {
 
     override fun onDetach() {
         super.onDetach()
-        listener = null
+        mCallback = null
     }
 
     /**
@@ -114,7 +135,19 @@ class SelectedItemFragment : Fragment() {
      */
     interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
-        fun onFragmentInteraction(uri: Uri)
+        fun onFragmentIsEmpty(state: Boolean)
+
+        fun onPhotoClick()
+        fun onTitleClick(data: String)
+        fun onCostClick(data: String)
+        fun onDescriptionClick(data: String)
+    }
+
+    fun reloadItem(item: ItemModel?) {
+        if (item != null) {
+            mItem = item
+            draw(mItem)
+        }
     }
 
     companion object {
@@ -136,7 +169,8 @@ class SelectedItemFragment : Fragment() {
                 }
 
         private val defaultItem = ItemModel("Title", 0.0, "Description", "", "")
-    }
 
+        fun getDefaultItem() = defaultItem
+    }
 
 }

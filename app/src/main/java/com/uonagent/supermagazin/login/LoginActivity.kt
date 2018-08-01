@@ -9,7 +9,7 @@ import android.view.View
 import android.widget.Toast
 import com.uonagent.supermagazin.R
 import com.uonagent.supermagazin.user.UserActivity
-import com.uonagent.supermagazin.utils.LoginFields
+import com.uonagent.supermagazin.utils.enums.LoginFields
 import kotlinx.android.synthetic.main.activity_login.*
 
 
@@ -24,7 +24,12 @@ class LoginActivity : AppCompatActivity(), LoginContract.View {
         )
     }
 
+
     private lateinit var mPresenter: LoginContract.Presenter
+
+    override fun showInfoMessage(message: String) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 
     override fun getAuthErrorMessage() =
             resources.getString(R.string.login_auth_error)!!

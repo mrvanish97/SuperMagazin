@@ -1,12 +1,11 @@
 package com.uonagent.supermagazin.login
 
 import com.uonagent.supermagazin.utils.Contract
-import com.uonagent.supermagazin.utils.LoginFields
+import com.uonagent.supermagazin.utils.enums.LoginFields
 
 interface LoginContract : Contract {
 
     interface View : Contract.View {
-        fun showErrorMessage(message: String)
         fun setLoadingLayout()
         fun setIdleLayout()
         fun startListActivity()

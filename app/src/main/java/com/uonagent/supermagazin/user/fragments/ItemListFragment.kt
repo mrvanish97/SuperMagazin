@@ -1,4 +1,4 @@
-package com.uonagent.supermagazin.user
+package com.uonagent.supermagazin.user.fragments
 
 import android.content.Context
 import android.os.Bundle
@@ -10,8 +10,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.uonagent.supermagazin.R
-import com.uonagent.supermagazin.utils.ItemModel
-import com.uonagent.supermagazin.utils.RecyclerItemClickListener
+import com.uonagent.supermagazin.utils.recycleviewadapters.ItemListAdapter
+import com.uonagent.supermagazin.utils.models.ItemModel
+import com.uonagent.supermagazin.utils.listeners.RecyclerItemClickListener
 import kotlinx.android.synthetic.main.fragment_list.view.*
 
 private const val ARG_PARAM1 = "param1"
@@ -30,7 +31,7 @@ class ItemListFragment : Fragment() {
 
     private var mCallBack: OnFragmentInteractionListener? = null
 
-    private lateinit var mAdapter: ListAdapter
+    private lateinit var mAdapter: ItemListAdapter
 
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var list: MutableList<ItemModel>
@@ -47,7 +48,7 @@ class ItemListFragment : Fragment() {
 
         list = ArrayList()
 
-        mAdapter = ListAdapter(list, context)
+        mAdapter = ItemListAdapter(list, context)
     }
 
     fun notifyDatasetChanged() {
@@ -75,7 +76,7 @@ class ItemListFragment : Fragment() {
                         context, mRecyclerView,
                         object : RecyclerItemClickListener.OnItemClickListener {
                             override fun onItemClick(view: View, position: Int) {
-                                mCallBack?.onItemClick(list[position].uid)
+                                mCallBack?.onItemClick(list[position])
                             }
 
                             override fun onLongItemClick(view: View?, position: Int) {
@@ -107,7 +108,7 @@ class ItemListFragment : Fragment() {
 
     interface OnFragmentInteractionListener {
         fun onFragmentViewCreated(list: MutableList<ItemModel>)
-        fun onItemClick(uid: String)
+        fun onItemClick(item: ItemModel)
         fun onItemLongClick(uid: String)
     }
 

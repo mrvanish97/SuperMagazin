@@ -1,4 +1,4 @@
-package com.uonagent.supermagazin.user
+package com.uonagent.supermagazin.utils.recycleviewadapters
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView
@@ -8,13 +8,14 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import com.uonagent.supermagazin.R
+import com.uonagent.supermagazin.user.UserRepository
 import com.uonagent.supermagazin.utils.CurrencyFormatter
-import com.uonagent.supermagazin.utils.ItemModel
+import com.uonagent.supermagazin.utils.models.ItemModel
 import kotlinx.android.synthetic.main.list_item.view.*
 
 
-class ListAdapter(private val list: List<ItemModel>, private val context: Context?) :
-        RecyclerView.Adapter<ListAdapter.ListViewHolder>() {
+class ItemListAdapter(private val list: List<ItemModel>, private val context: Context?) :
+        RecyclerView.Adapter<ItemListAdapter.ListViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListViewHolder {
         val view = LayoutInflater.from(parent.context)

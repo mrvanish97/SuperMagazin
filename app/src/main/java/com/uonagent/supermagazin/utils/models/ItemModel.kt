@@ -1,4 +1,4 @@
-package com.uonagent.supermagazin.utils
+package com.uonagent.supermagazin.utils.models
 
 import android.os.Parcel
 import android.os.Parcelable
@@ -38,4 +38,12 @@ data class ItemModel(
             return arrayOfNulls(size)
         }
     }
+
+    fun asMap() = mapOf(
+                Pair("title", title),
+                Pair("cost", cost),
+                Pair("description", description),
+                Pair("photo", photo),
+                Pair("uid", uid)
+    )
 }

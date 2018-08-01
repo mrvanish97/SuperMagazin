@@ -1,7 +1,7 @@
 package com.uonagent.supermagazin.login
 
-import com.uonagent.supermagazin.utils.FirebaseAuthListener
-import com.uonagent.supermagazin.utils.LoginFields
+import com.uonagent.supermagazin.utils.listeners.FirebaseAuthListener
+import com.uonagent.supermagazin.utils.enums.LoginFields
 
 class LoginPresenter(private val mView: LoginContract.View) : LoginContract.Presenter {
 

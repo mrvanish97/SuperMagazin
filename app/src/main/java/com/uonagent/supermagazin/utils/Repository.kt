@@ -7,13 +7,46 @@ import android.widget.ImageView
 import com.bumptech.glide.Glide
 import com.firebase.ui.storage.images.FirebaseImageLoader
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.uonagent.supermagazin.R
+import com.uonagent.supermagazin.utils.listeners.FirebaseEditListener
+import com.uonagent.supermagazin.utils.listeners.FirebaseAuthListener
+import com.uonagent.supermagazin.utils.listeners.FirebaseListListener
+import com.uonagent.supermagazin.utils.models.ItemModel
+import com.uonagent.supermagazin.utils.models.OrderModel
 
 private const val TAG = "Repository"
 
+private const val ORDERS_COLLECTION = "orders"
+private const val ITEMS_COLLECTION = "items"
+private const val USERS_COLLECTION = "users"
+private const val TYPE_KEY = "type"
+private const val TYPE_ADMIN = "admin"
+private const val UID_KEY = "uid"
+private const val AUTH_UID_KEY = "authuid"
+private const val COST_KEY = "cost"
+
+private const val UNKNOWN_ERROR_MESSAGE = "Unknown Error"
+
 open class Repository : Contract.Repository {
+    override fun addOrder(order: OrderModel, listener: FirebaseEditListener) {
+        db.collection(ORDERS_COLLECTION).add(order).addOnSuccessListener {
+            addUidToDocument(it, listener)
+        }.addOnFailureListener {
+            listener.onFailure(UNKNOWN_ERROR_MESSAGE)
+        }
+    }
+
+    private fun addUidToDocument(documentReference: DocumentReference, listener: FirebaseEditListener) {
+        documentReference.update(UID_KEY, documentReference.id).addOnSuccessListener {
+            listener.onSuccess()
+        }.addOnFailureListener {
+            listener.onFailure(UNKNOWN_ERROR_MESSAGE)
+        }
+    }
+
     override fun isUserAnon(): Boolean {
         return mAuth.currentUser!!.isAnonymous
     }
@@ -80,7 +113,7 @@ open class Repository : Contract.Repository {
 
     override fun reloadItemList(listener: FirebaseListListener) {
         listener.onStart()
-        db.collection("items").get().addOnCompleteListener {
+        db.collection(ITEMS_COLLECTION).orderBy(COST_KEY).get().addOnCompleteListener {
             if (it.isSuccessful) {
                 for (document in it.result) {
                     val item = document.toObject(ItemModel::class.java)
@@ -94,19 +127,21 @@ open class Repository : Contract.Repository {
     }
 
     override fun addItemListListener(listener: FirebaseListListener) {
-        db.collection("items").get()
+        db.collection(ITEMS_COLLECTION).get()
     }
 
-    override fun isCurrentUserAdmin(listener: FirebaseAuthListener) {
-        db.collection("users").whereEqualTo("uid", mAuth.uid).get().addOnCompleteListener {
+    override fun getAdminPermissions(listener: FirebaseAuthListener) {
+        db.collection(USERS_COLLECTION).whereEqualTo(AUTH_UID_KEY, mAuth.uid).get().addOnCompleteListener {
             if (it.isSuccessful) {
                 for (doc in it.result) {
-                    val type = doc["type"] as String
-                    if (type == "admin") {
+                    val type = doc[TYPE_KEY] as String
+                    Log.d(TAG, type)
+                    if (type == TYPE_ADMIN) {
+                        Log.d(TAG, "THIS USER IS AN ADMIN")
                         listener.onSuccess()
                     } else {
                         listener.onFailure()
-                        Log.d(TAG, "THIS USER ISN'T AN ADMIN")
+                        Log.d(TAG, "THIS USER IS A PLAIN USER")
                     }
                 }
             }
@@ -115,12 +150,36 @@ open class Repository : Contract.Repository {
 
     override fun getItemById(uid: String?, f: (ItemModel?) -> Unit) {
         if (uid != null) {
-            db.collection("items").document(uid).get().addOnCompleteListener {
+            db.collection(ITEMS_COLLECTION).document(uid).get().addOnCompleteListener {
                 if (it.isSuccessful) {
                     val item = it.result.toObject(ItemModel::class.java)
                     f(item)
                 }
             }
+        }
+    }
+
+    override fun addItem(item: ItemModel, listener: FirebaseEditListener) {
+        db.collection(ITEMS_COLLECTION).add(item).addOnSuccessListener {
+            addUidToDocument(it, listener)
+        }.addOnFailureListener {
+            listener.onFailure(UNKNOWN_ERROR_MESSAGE)
+        }
+    }
+
+    override fun updateItem(item: ItemModel, listener: FirebaseEditListener) {
+        db.collection(ITEMS_COLLECTION).document(item.uid).update(item.asMap()).addOnSuccessListener {
+            listener.onSuccess()
+        }.addOnFailureListener {
+            listener.onFailure(UNKNOWN_ERROR_MESSAGE)
+        }
+    }
+
+    override fun removeItem(uid: String, listener: FirebaseEditListener) {
+        db.collection(ITEMS_COLLECTION).document(uid).delete().addOnSuccessListener {
+            listener.onSuccess()
+        }.addOnFailureListener {
+            listener.onFailure(UNKNOWN_ERROR_MESSAGE)
         }
     }
 }

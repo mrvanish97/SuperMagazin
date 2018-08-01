@@ -1,4 +1,4 @@
-package com.uonagent.supermagazin.utils
+package com.uonagent.supermagazin.utils.models
 
 import android.os.Parcel
 import android.os.Parcelable
@@ -7,10 +7,12 @@ data class OrderModel(
         var item: ItemModel = ItemModel(),
         var clientName: String = "",
         var clientEmail: String = "",
-        var details: String = ""
+        var details: String = "",
+        var uid: String = ""
 ) : Parcelable {
         constructor(parcel: Parcel) : this(
                 parcel.readParcelable(ItemModel::class.java.classLoader),
+                parcel.readString(),
                 parcel.readString(),
                 parcel.readString(),
                 parcel.readString()) {
@@ -21,6 +23,7 @@ data class OrderModel(
                 parcel.writeString(clientName)
                 parcel.writeString(clientEmail)
                 parcel.writeString(details)
+                parcel.writeString(uid)
         }
 
         override fun describeContents(): Int {

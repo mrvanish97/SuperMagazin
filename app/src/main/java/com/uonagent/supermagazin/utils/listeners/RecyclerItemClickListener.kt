@@ -1,4 +1,4 @@
-package com.uonagent.supermagazin.utils
+package com.uonagent.supermagazin.utils.listeners
 
 import android.content.Context
 import android.view.MotionEvent

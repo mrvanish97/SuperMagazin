@@ -31,5 +31,22 @@
     <string name="user_menu_inbox">Inbox</string>
     <string name="order_name">Name</string>
     <string name="order_email">Email</string>
-    <string name="order_details">Order Detalis</string>
+    <string name="order_details">Order Details</string>
+    <string name="order_menu_send">Send order</string>
+
+    <string name="order_empty_email">You have to enter an email</string>
+    <string name="order_empty_name">You have to enter your name</string>
+
+    <string name="user_title_add">Add item</string>
+    <string name="user_title_edit">Edit item</string>
+
+    <string name="remove_item_dialog_title">Remove this item?</string>
+    
+    <string name="dialog_yes">Yes</string>
+    <string name="dialog_no">No</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_apply">Apply</string>
+
+    <string name="dialog_empty_error">Field can\'t be empty</string>
+
 </resources>
